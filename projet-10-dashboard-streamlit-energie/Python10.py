@@ -113,5 +113,21 @@ if page == "Prévisions":
         col3.metric("RMSE",f"{rmse:.0f} MW")
         col4.metric("MAPE",f"{mape:.0f} %")
 
-        
+if page == "Analyse":
+    st.title("Analyse approfondie")   
+    st.subheader("Correlation entre consommation et température")
+    corr = px.scatter(df_filtre, x="temperature", y="conso_mw", trendline="ols")
+    st.plotly_chart(corr,use_container_width=True)
+    
+    st.subheader("Anomalie de detection (>2*écartype)")
+    moyenne = df_filtre["conso_mw"].mean()
+    ecartype = df_filtre["conso_mw"].std()
+    anomalie = df[df_filtre["conso_mw"] - moyenne > 2*ecartype]
+    fig_anom = go.Figure()
+    fig_anom.add_trace(go.Scatter(x=df_filtre["date"],y=df_filtre["conso_mw"], mode=line,name="Consommation"))
+    fig_anom.add_trace(go.Scatter(x=anomalie["date"],y=anomalie["conso_mw"],mode=marker, name="Anomalie",marker=dict(color="red", size=10)))
+    st.plotly_chart(fig_anom,use_container_width=True)
 
+    st.subheader("Contribution de chaque ville")
+    fig_region = px.box(df, x="region", y="conso_mw",color="region")
+    st.plotly_chart(fig_region,use_container_width=True)
