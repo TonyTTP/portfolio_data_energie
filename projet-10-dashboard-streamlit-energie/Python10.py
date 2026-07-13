@@ -44,3 +44,42 @@ type_graphique = st.sidebar.radio("Type de graphique", [["Ligne","Barre","Diffus
 #on va mettre en place un dataframe filtré poir filtré la region et la temporalité
 
 df_filtre = df[df["region"] == region].tail(periode)
+
+
+if page == "Tableau de bord" : 
+    st.title("Tableau de Bord Energie France")
+    col1, col2,col3,col4 == st.columns(4)
+    col1.metric("Conso moyenne", f"{df_filtre["conso_mw"].mean():.0f} MW")
+    col2.metric("Maximum", f"{df_filtre["conso_mw"].max():.0f} MW")
+    col3.metric("Minimum", f"{df_filtre["conso_mw"].min():.0f} MW")
+    variation = df_filtre["conso_mw"].iloc[-1] - df_filtre["conso_mw"].iloc[0]
+    col4.metric("Variation ", f"{variation:+.0f} MW")
+
+    st.subheader("Table brute")
+    st.dataframe(df_filtre)
+
+    col1, col2 == st.columns(2)
+
+    with col1:
+        st.subheader("Consommation")
+        if type_graphique == "Ligne":
+            st.line_chart(df_filtre.set_index("date")["conso_mw"])
+        elif type_graphique == "Barre" : 
+            st.bar_chart(df_filtre.set_index("date")["conso_mw"])
+        else:
+            fig = px.scatter(df_filtre, x="date", y="conso_mw")
+            st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        st.subheader("Mix Energétique")
+        if type_graphique == "Ligne": 
+            st.line_chart(df_filtre.set_index("date")["prod_eolien","prod_nucleaire"])
+        elif type_graphique == "Barre":
+            st.bar_chart(df_filtre.set_index("date")["prod_eolien","prod_nucleaire"])
+        else: 
+            fig = px.scatter(df_filtre, x="date", y=["prod_nucleaire","prod_eolien"])
+            st.plotly_chart(fig, use_container_width=True)
+
+    st.subheader("Répartition de l'énergie (camenbert)")
+    fig_pie = px.pie(names=["Prod Eolien", "Prod Nucleaire"], values=[df_filtre["prod_eolien"].sum(),df_filtre["prod_nucleaire"].sum()])
+    st.plotly_chart(fig_pie, use_container_width=True)
