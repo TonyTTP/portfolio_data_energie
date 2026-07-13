@@ -11,7 +11,7 @@ from prophet import Prophet
 
 # CONFIGURATION DE LA PAGE
 
-st.page_config(
+st.set_page_config(
     page_title="Dashboard RTE (simulation)",
     page_icon="⚡",
     layout="wide",
@@ -31,15 +31,15 @@ df = pd.DataFrame({
     "region"         : np.tile(["Paris","Lyon","Marseille"], 122)[:365]
 })
 
-st.sidebar_title("Paramètre")
+st.sidebar.title("Paramètres")
 
-page = st.sidebar.radio("Navigation", [["Tableau de bord","Prévisions","Analyse"]])
+page = st.sidebar.radio("Navigation", ["Tableau de bord", "Prévisions", "Analyse"])
 
-region = st.sidebar.selectbox("Region", [["Paris","Lyon","Marseille"]])
+region = st.sidebar.selectbox("Région", ["Paris", "Lyon", "Marseille"])
 
 periode = st.sidebar.slider("Periode (jours)", min_value=7, max_value=365, value=90)
 
-type_graphique = st.sidebar.radio("Type de graphique", [["Ligne","Barre","Diffusion"]])
+type_graphique = st.sidebar.radio("Type de graphique", ["Ligne", "Barre", "Diffusion"])
 
 #on va mettre en place un dataframe filtré poir filtré la region et la temporalité
 
@@ -48,7 +48,7 @@ df_filtre = df[df["region"] == region].tail(periode)
 
 if page == "Tableau de bord" : 
     st.title("Tableau de Bord Energie France")
-    col1, col2,col3,col4 == st.columns(4)
+    col1, col2,col3,col4 = st.columns(4)
     col1.metric("Conso moyenne", f"{df_filtre["conso_mw"].mean():.0f} MW")
     col2.metric("Maximum", f"{df_filtre["conso_mw"].max():.0f} MW")
     col3.metric("Minimum", f"{df_filtre["conso_mw"].min():.0f} MW")
@@ -58,7 +58,7 @@ if page == "Tableau de bord" :
     st.subheader("Table brute")
     st.dataframe(df_filtre)
 
-    col1, col2 == st.columns(2)
+    col1, col2 = st.columns(2)
 
     with col1:
         st.subheader("Consommation")
@@ -73,9 +73,9 @@ if page == "Tableau de bord" :
     with col2:
         st.subheader("Mix Energétique")
         if type_graphique == "Ligne": 
-            st.line_chart(df_filtre.set_index("date")["prod_eolien","prod_nucleaire"])
+            st.line_chart(df_filtre.set_index("date")[["prod_eolien","prod_nucleaire"]])
         elif type_graphique == "Barre":
-            st.bar_chart(df_filtre.set_index("date")["prod_eolien","prod_nucleaire"])
+            st.bar_chart(df_filtre.set_index("date")[["prod_eolien","prod_nucleaire"]])
         else: 
             fig = px.scatter(df_filtre, x="date", y=["prod_nucleaire","prod_eolien"])
             st.plotly_chart(fig, use_container_width=True)
@@ -98,18 +98,18 @@ if page == "Prévisions":
     if st.button("Lancer la prévision"):
         with st.spinner("Prediction en cours"):
             modele = train_model(df_p)
-            future = modele.make_future_dataframe(periods=periode)
+            future = modele.make_future_dataframe(periods=nb_jours)
             prediction = modele.predict(future)
 
         st.success("Prediction terminée")
-        st.line_chart(prediction.set_index("ds")["yhat", "yhat_lower","yhat_upper"])
+        st.line_chart(prediction.set_index("ds")[["yhat", "yhat_lower","yhat_upper"]])
         col1, col2, col3, col4 = st.columns(4)
-        merged = df_p.merge(prediction[["ds"],["yhat"]], on="date",how="inner")
+        merged = df_p.merge(prediction[["ds","yhat"]], on="ds",how="inner")
         rmse = np.sqrt(np.mean((merged["y"] - merged["yhat"])**2))
-        mape= np.mean(merged["y"] - merged["yhat"] / merged["y"])*100
+        mape = np.mean(np.abs((merged["y"] - merged["yhat"]) / merged["y"])) * 100
 
-        col1.metric("Prevision j+1",f"{prediction["yhat"].iloc[-1]} MW")
-        c2.metric("Intervalle confiance", f"±{(forecast['yhat_upper'].iloc[-1]-forecast['yhat_lower'].iloc[-1])/2:.0f} MW")
+        col1.metric("Prevision j+1",f"{prediction["yhat"].iloc[-1]:.0f} MW")
+        col2.metric("Intervalle confiance", f"±{(prediction['yhat_upper'].iloc[-1] - prediction['yhat_lower'].iloc[-1])/2:.0f} MW")
         col3.metric("RMSE",f"{rmse:.0f} MW")
         col4.metric("MAPE",f"{mape:.0f} %")
 
@@ -122,10 +122,10 @@ if page == "Analyse":
     st.subheader("Anomalie de detection (>2*écartype)")
     moyenne = df_filtre["conso_mw"].mean()
     ecartype = df_filtre["conso_mw"].std()
-    anomalie = df[df_filtre["conso_mw"] - moyenne > 2*ecartype]
+    anomalie = df_filtre[np.abs(df_filtre["conso_mw"] - moyenne) > 2 * ecartype]
     fig_anom = go.Figure()
-    fig_anom.add_trace(go.Scatter(x=df_filtre["date"],y=df_filtre["conso_mw"], mode=line,name="Consommation"))
-    fig_anom.add_trace(go.Scatter(x=anomalie["date"],y=anomalie["conso_mw"],mode=marker, name="Anomalie",marker=dict(color="red", size=10)))
+    fig_anom.add_trace(go.Scatter(x=df_filtre["date"],y=df_filtre["conso_mw"], mode="lines",name="Consommation"))
+    fig_anom.add_trace(go.Scatter(x=anomalie["date"],y=anomalie["conso_mw"],mode="markers", name="Anomalie",marker=dict(color="red", size=10)))
     st.plotly_chart(fig_anom,use_container_width=True)
 
     st.subheader("Contribution de chaque ville")
