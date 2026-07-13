@@ -83,3 +83,35 @@ if page == "Tableau de bord" :
     st.subheader("Répartition de l'énergie (camenbert)")
     fig_pie = px.pie(names=["Prod Eolien", "Prod Nucleaire"], values=[df_filtre["prod_eolien"].sum(),df_filtre["prod_nucleaire"].sum()])
     st.plotly_chart(fig_pie, use_container_width=True)
+
+if page == "Prévisions": 
+    st.title("Prévision Consommation")
+
+    df_p = df[["date", "conso_mw"]].rename(columns={"date" : "ds", "conso_mw" : "y"})
+
+    def train_model(data):
+        modele = Prophet(yearly_seasonality=True)
+        modele.fit(data)
+        return modele
+
+    nb_jours = st.number_input("Nombre de jours à prévoir", min_value=30,max_value=365,value=90)
+    if st.button("Lancer la prévision"):
+        with st.spinner("Prediction en cours"):
+            modele = train_model(df_p)
+            future = modele.make_future_dataframe(periods=periode)
+            prediction = modele.predict(future)
+
+        st.success("Prediction terminée")
+        st.line_chart(prediction.set_index("ds")["yhat", "yhat_lower","yhat_upper"])
+        col1, col2, col3, col4 = st.columns(4)
+        merged = df_p.merge(prediction[["ds"],["yhat"]], on="date",how="inner")
+        rmse = np.sqrt(np.mean((merged["y"] - merged["yhat"])**2))
+        mape= np.mean(merged["y"] - merged["yhat"] / merged["y"])*100
+
+        col1.metric("Prevision j+1",f"{prediction["yhat"].iloc[-1]} MW")
+        c2.metric("Intervalle confiance", f"±{(forecast['yhat_upper'].iloc[-1]-forecast['yhat_lower'].iloc[-1])/2:.0f} MW")
+        col3.metric("RMSE",f"{rmse:.0f} MW")
+        col4.metric("MAPE",f"{mape:.0f} %")
+
+        
+
