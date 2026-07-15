@@ -62,7 +62,7 @@ region, date,
 FROM conso_journaliere
 GROUP BY mois,region
 ORDER BY mois,region;
-
+--
 -- Sous-requête pour calculer moyenne + écart-type
 -- Puis filtre les valeurs > moyenne + 2*std
 
