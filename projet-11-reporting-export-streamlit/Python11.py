@@ -2,6 +2,7 @@
 #  Dashboard Énergie France — App Streamlit 3 "pages"
 
 import streamlit as st
+import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -12,11 +13,6 @@ from fpdf import FPDF
 
 # Configuration de la page 
 
-st.set_page_config(
-    page_icon="⚡",
-    page_title="Dashboard RTE",
-    layout="wide"
-)
 
 @st.cache_data
 def charger_donnees():
@@ -42,19 +38,75 @@ def charger_donnees():
 #fonction convertir en csv
 
 def convert_to_csv(df):
-    return df.to_csv(index=False).encode("utf-8")
+    df_export = df[["date","region","conso_mw","temperature"]]
+    return df_export.to_csv(index=False, sep=";", encoding="utf-8-sig").encode("utf-8-sig")
 
 #generer un pdf
 
 def generate_pdf(df,region,moy,pic):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial",size=16)
-    pdf.cell(200,10,f"Rapport Energie - {region}", ln=True,align="C")
-    pdf.set_font("Arial",size=12)
-    pdf.cell(200,10,f"Moyenne : {moy}", ln=True)
-    pdf.cell(200,10,f"Pic : {pic} MW", ln=True)
-    pdf.output(dest="S").encode("latin-1")
+    #en tete
+    pdf.set_font("Arial","B",18)
+    pdf.set_text_color(0,0,0)
+    pdf.cell(0,12,"Rapport Energie",ln=True,align="C")
+    ln(4)
+
+    pdf.set_font("Arial","",13)
+    pdf.set_text_color(100,100,100)
+    pdf.cell(0,12, f"Region : {region}", ln=True,align="C")
+    pdf.cell(0,12, f"Génère le {pd.Timestemp.now().strftime('%d-%m-%Y) à %H-%M')}", ln=True,align="C")
+    ln(8)
+
+    pdf.set_draw_color(0,0,0)
+    pdf.line(10, pdf.get_y(),200,pdf.get_y())
+    ln(8)
+
+    pdf.set_font("Arial","B",13)
+    pdf.set_text_color(0,0,0)
+    pdf.cell(0,12, f"Indicateurs clés", ln=True)
+    ln(2)
+
+    pdf.set_font("Arial","",11)
+    pdf.set_text_color(240,240,240)
+    pdf.cell(95,10, "Consommation moyenne",border=1,fill=True)
+    pdf.cell(95,10,f"{moy:.0f}", ln=True, fill=False)
+    pdf.cell(95,10,"Pic maximum", border=1, fill=True)
+    pdf.cell(95,10,f"{pic:.0f}", ln=True, fill=False)
+    ln(10)
+
+    pdf.set_font("Arial","B",14)
+    pdf.set_text_color(0,0,0)
+    pdf.cell(0,12,"Extrait des donnees (10 premieres lignes)", ln=True)
+
+    headers = ["Date","Région","Conso (MW)", "Temp (°C)"]
+    widths = [50,50,50,50]
+
+    pdf.set_font("Arial","",12)
+    pdf.set.set_text_color(255,255,255)
+    pdf.set_fill_color(50,90,150)
+
+    for header, width in zip(headers,widths):
+        pdf.cell(width,8,header,border=1,fill=True, align="C")
+    pdf.ln()
+
+        # Lignes du tableau
+    pdf.set_font("Arial", "", 10)
+    pdf.set_text_color(0, 0, 0)
+
+    for i, (_, row) in enumerate(df.head(10).iterrows()):
+        fill = (i % 2 == 0)
+        if fill:
+            pdf.set_fill_color(245, 245, 245)
+
+        pdf.cell(width[0],8,row["date"].strftime("%d/%m/%Y"), border=1,fill=fill)
+        pdf.cell(width[1],8,row["region"], border=1, fill=fill)
+        pdf.cell(width[2],8,f"{row["conso_mw"]:.0f}", border=1, fill=fill)
+        pdf.cell(width[3],8,f"{row["temperature"]:.0f}", border=1, fill=fill)
+        pdf.ln()
+
+    return bytes(pdf.output(dest="S"))
+
 
 def graph_ligne_conso(df):
     fig = px.line(
