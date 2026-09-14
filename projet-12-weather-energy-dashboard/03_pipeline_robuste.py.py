@@ -1,15 +1,15 @@
 import requests
 import sqlite3
 import numpy as np
-import pands as pd
+import pandas as pd
 import plotly.express as px
 from datetime import datetime
 
-def recup_meteo(ville,long,lat,jours=90):
+def recup_meteo(ville,lat,long,jours=90):
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude" : lat,
-        "longitude" : longitude,
+        "longitude" : long,
         "ville" : ville,
         "timezone" : "Europe/Paris",
         "hourly" : ["temperature_2m","precipitation"],
@@ -29,17 +29,18 @@ def recup_meteo(ville,long,lat,jours=90):
 
 def fetch_toute_villes(past_days=90):
     villes = {
-        "Paris" : (),
-        "Lyon" : (),
-        "Marseille" : (),
-        "Bordeaux" : (),
-        "Lille" : (),
+        "Paris" : (48.85, 2.35),
+        "Lyon" : (45.75, 4.85),
+        "Marseille" : (43.30, 5.40),
+        "Bordeaux" : (44.84, -0.58),
+        "Lille" : (50.63, 3.06),
     }
     dftotal = []
     for ville,(lat,long) in villes.items():
         try:
             df = recup_meteo(ville,lat,long,past_days)
             dftotal.append(df)
+            print(f"{ville} validées")
         except Exception as e:
             print(f"{ville} : {e}")
     if not dftotal:
@@ -64,14 +65,14 @@ def stockage_donnees(df,db_path="meteo_france.db"):
     df.to_sql("meteo_horaire",connect, if_exists="replace", index=False)
 
     connect.close()
-    print(f"{len(df)}de lignes stockées")
+    print(f"{len(df)} de lignes stockées")
 
 def analyser(db_path="meteo_france.db"):
     connect = sqlite3.connect(db_path)
     query = """
     SELECT ville, DATE(time) AS jour,
     ROUND(AVG(temperature_2m),1) AS temperature_moyenne,
-    ROUND(SUM(precipitation),1) AS precipitation_cum_mm,
+    ROUND(SUM(precipitation),1) AS precipitation_cum_mm
     FROM meteo_horaire
     GROUP BY ville,jour
     ORDER BY ville,jour
@@ -82,6 +83,6 @@ def analyser(db_path="meteo_france.db"):
 
 df_raw = fetch_toute_villes(past_days=90)
 df_clean = clean_meteo(df_raw)
-store_data(df_clean)
+stockage_donnees(df_clean)
 df_analyse = analyser()
 print(df_analyse.head(10))
