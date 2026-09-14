@@ -58,3 +58,10 @@ def clean_meteo(df):
     df["precipitation"] = df["precipitation"].clip(lower=0)
 
     return df
+
+def stockage_donnees(df,db_path="meteo_france.db"):
+    connect = sqlite3.connect("meteo_france.db")
+    df.to_sql("meteo_horaire",connect, if_exists="replace", index=False)
+
+    connect.close()
+    print(f"{len(df)}de lignes stockées")
