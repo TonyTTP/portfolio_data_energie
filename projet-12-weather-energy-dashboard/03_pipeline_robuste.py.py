@@ -45,3 +45,16 @@ def fetch_toute_villes(past_days=90):
     if not dftotal:
         raise Exception("Aucune donnée de récupérée")
     return pd.concat(dftotal,ignore_index=True)
+
+
+
+def clean_meteo(df): 
+    df = df.copy()
+
+    df = df[df["time"] <= pd.Timestamp('now')]
+
+    df["temperature_2m"] = (df["temperature_2m"].interpolate(method="linear"))
+
+    df["precipitation"] = df["precipitation"].clip(lower=0)
+
+    return df
