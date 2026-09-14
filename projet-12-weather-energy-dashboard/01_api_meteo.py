@@ -1,8 +1,10 @@
-import pandas as pd 
+import pandas as pd
 import numpy as np
 import requests
 import sqlite3
 import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 def recup_meteo(ville,lat,long,jours=30):
 
@@ -122,3 +124,79 @@ fig4 = px.box(
 )
 
 fig4.show()
+
+fig5 = make_subplots(rows=2,cols=2,
+    subplot_titles=(
+    "Températures par ville",
+    "Précipitations",
+    "Vitesse du vent",
+    "Couverture nuageux"),
+    shared_xaxes=True)
+
+dict_color = {
+    "Paris" : "FF0000",
+    "Lyon" : "#0000FF",
+    "Marseille" : "#00FF00",
+
+}
+
+for ville,col in dict_color.items():
+
+    dfv = df_meteo[df_meteo["ville"] == ville]
+
+    fig5.add_trace(
+        go.Scatter(
+          x = dfv["time"],
+          y = dfv["temperature_2m"],
+          name=ville,
+          mode="lines",
+          line= dict(color=color),
+          legendgroup=ville,
+          showlegend=False ),
+        rows=1, col=1
+    )
+
+    fig5.add_trace(
+        go.Scatter(
+            x=dfv["time"],
+            y=dfv["windspeed_10m"],
+            name=ville,
+            mode="lines",
+            dash="dot",
+            line= dict(color=color),
+            legendgroup=ville,
+            showlegend=False
+        ),
+        rows=2, col=1
+    )
+
+    fig5.add_trace(
+        go.Scatter(
+            x=dfv["time"],
+            y=dfv["precipitation"],
+            name=ville,
+            mode="lines",
+            line = dict(color=color),
+            legendgroup=ville,
+            showlegend=False,
+        ), rows=1, col=2
+        
+            )
+
+    fig5.add_trace(
+        go.Scatter(
+            x=dfv["time"],
+            y=dfv["cloudcover"],
+            name=ville,
+            mode="lines",
+            line = dict(color=color),
+            legendgroup=ville, 
+            showlegend=False,
+        ), rows=2,col=2
+    )
+
+fig5.show()
+
+
+
+    
