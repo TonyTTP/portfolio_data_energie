@@ -26,3 +26,22 @@ def recup_meteo(ville,long,lat,jours=90):
     df["time"] = pd.to_datetime(df["time"])
     df["ville"] = ville 
     return df
+
+def fetch_toute_villes(past_days=90):
+    villes = {
+        "Paris" : (),
+        "Lyon" : (),
+        "Marseille" : (),
+        "Bordeaux" : (),
+        "Lille" : (),
+    }
+    dftotal = []
+    for ville,(lat,long) in villes.items():
+        try:
+            df = recup_meteo(ville,lat,long,past_days)
+            dftotal.append(df)
+        except Exception as e:
+            print(f"{ville} : {e}")
+    if not dftotal:
+        raise Exception("Aucune donnée de récupérée")
+    return pd.concat(dftotal,ignore_index=True)
