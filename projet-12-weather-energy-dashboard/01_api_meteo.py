@@ -77,7 +77,7 @@ fig1 = px.line(
     y="temperature_2m",
     color="ville",
     title="Graphe en ligne de la Température en fonction du temps",
-    label= {
+    labels= {
         "time" : "Date",
         "temperature_2m" : "Temperature (°C)",
         "ville" : "Ville"
