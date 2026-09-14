@@ -195,7 +195,3 @@ for ville,col in dict_color.items():
     )
 
 fig5.show()
-
-
-
-    
