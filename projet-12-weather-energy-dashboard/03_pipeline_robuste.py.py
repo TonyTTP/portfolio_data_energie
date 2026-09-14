@@ -65,3 +65,17 @@ def stockage_donnees(df,db_path="meteo_france.db"):
 
     connect.close()
     print(f"{len(df)}de lignes stockées")
+
+def analyser(db_path="meteo_france.db"):
+    connect = sqlite3.connect(db_path)
+    query = """
+    SELECT ville, DATE(time) AS jour,
+    ROUND(AVG(temperature_2m),1) AS temperature_moyenne,
+    ROUND(SUM(precipitation),1) AS precipitation_cum_mm,
+    FROM meteo_horaire
+    GROUP BY ville,jour
+    ORDER BY ville,jour
+    """
+    df = pd.read_sql(query,connect)
+    connect.close()
+    return df
