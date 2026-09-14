@@ -79,3 +79,9 @@ def analyser(db_path="meteo_france.db"):
     df = pd.read_sql(query,connect)
     connect.close()
     return df
+
+df_raw = fetch_toute_villes(past_days=90)
+df_clean = clean_meteo(df_raw)
+store_data(df_clean)
+df_analyse = analyser()
+print(df_analyse.head(10))
