@@ -134,7 +134,7 @@ fig5 = make_subplots(rows=2,cols=2,
     shared_xaxes=True)
 
 dict_color = {
-    "Paris" : "FF0000",
+    "Paris" : "#FF0000",
     "Lyon" : "#0000FF",
     "Marseille" : "#00FF00",
 
@@ -150,10 +150,10 @@ for ville,col in dict_color.items():
           y = dfv["temperature_2m"],
           name=ville,
           mode="lines",
-          line= dict(color=color),
+          line= dict(color=col),
           legendgroup=ville,
           showlegend=False ),
-        rows=1, col=1
+        row=1, col=1
     )
 
     fig5.add_trace(
@@ -162,12 +162,11 @@ for ville,col in dict_color.items():
             y=dfv["windspeed_10m"],
             name=ville,
             mode="lines",
-            dash="dot",
-            line= dict(color=color),
+            line= dict(color=col, dash="dot"),
             legendgroup=ville,
             showlegend=False
         ),
-        rows=2, col=1
+        row=2, col=1
     )
 
     fig5.add_trace(
@@ -176,11 +175,11 @@ for ville,col in dict_color.items():
             y=dfv["precipitation"],
             name=ville,
             mode="lines",
-            line = dict(color=color),
+            line = dict(color=col),
             legendgroup=ville,
             showlegend=False,
-        ), rows=1, col=2
-        
+        ), row=1, col=2
+
             )
 
     fig5.add_trace(
@@ -189,10 +188,10 @@ for ville,col in dict_color.items():
             y=dfv["cloudcover"],
             name=ville,
             mode="lines",
-            line = dict(color=color),
-            legendgroup=ville, 
+            line = dict(color=col),
+            legendgroup=ville,
             showlegend=False,
-        ), rows=2,col=2
+        ), row=2,col=2
     )
 
 fig5.show()
