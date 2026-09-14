@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import requests
 import sqlite3
+import plotly.express as px
 
 def recup_meteo(ville,lat,long,jours=30):
 
@@ -69,3 +70,55 @@ df_meteo.to_sql("meteo_reelle",conn, if_exists="replace",index=False)
 conn.close()
 
 print("les données sont stockés dans SQlite")
+
+fig1 = px.line(
+    df_meteo,
+    x="time",
+    y="temperature_2m",
+    color="ville",
+    title="Graphe en ligne de la Température en fonction du temps",
+    label= {
+        "time" : "Date",
+        "temperature_2m" : "Temperature (°C)",
+        "ville" : "Ville"
+    }
+)
+
+fig1.show()
+
+df_heatmap = df_meteo[df_meteo["ville"] == "Paris"].copy()
+
+df_heatmap["heure"] = df_heatmap["time"].dt.hour
+
+df_heatmap["jour"] = df_heatmap["time"].dt.date
+
+pivot = df_heatmap.pivot_table(
+    index="heure",
+    values="temperature_2m",
+    columns="jour",
+    aggfunc="mean"
+)
+
+fig2 = px.imshow(
+    pivot,
+    title="Heatmap température Paris — heure x jour",
+    labels={
+        "x": "Jour",
+        "y": "Heure",
+        "color": "°C"
+    },
+    color_continuous_scale="RdBu_r"
+)
+
+fig2.show()
+
+fig4 = px.box(
+    df_meteo,
+    x="ville",
+    y="temperature_2m",
+    color="ville",
+    title="Distribution de la temperature par ville",
+    points="outliers"
+)
+
+fig4.show()
