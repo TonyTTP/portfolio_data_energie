@@ -20,3 +20,20 @@ FROM conso_journaliere
 GROUP BY region,heure
 
 ORDER BY region, heure;
+
+Requete 3 : variation % du meme jour année différente
+
+WITH consommation AS(SELECT date,conso_mw,region,
+LAG(conso_mw,365) OVER(PARTITION BY region ORDER BY date) AS conso_preced
+ FROM conso_journaliere )
+
+
+SELECT date, region, conso_mw, conso_preced,
+ROUND((conso_mw - conso_preced)/conso_preced,2)*100 AS variation_pourcentage
+
+FROM consommation
+WHERE conso_preced IS NOT NULL
+ORDER BY date;
+
+
+
