@@ -44,6 +44,19 @@ ville_choisie = st.sidebar.multiselect("Selection des villes",list(cor_ville.key
 
 periode = st.periode("Barre de période (nombre de jours passés)", min_value=1,max_value=90,value=30)
 
+with st.spinner("chargement des données"):
+    dfs=[]
+    for ville in cor_ville:
+        lat,long = cor_ville[ville]
+        df = recup_api(ville,lat,long)
+        dfs.append(df)
+
+if not dfs:
+    st.warning("il faut sélectionner un site au moins")
+    st.stop()
+
+dftot = pd.concat(dfs,ignore_index=True)
+
 
 
 
