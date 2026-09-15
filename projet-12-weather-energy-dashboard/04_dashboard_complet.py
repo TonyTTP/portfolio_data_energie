@@ -57,6 +57,12 @@ if not dfs:
 
 dftot = pd.concat(dfs,ignore_index=True)
 
+maintement = pd.Timestamp('now')
+
+df_passe = dftot[dftot["time"] <= maintement].copy()
+
+df_passe = df_passe[df_passe["time"] >= maintement - pd.Timedelta(days=periode)]
+
 
 
 
