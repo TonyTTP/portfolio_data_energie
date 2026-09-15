@@ -64,6 +64,29 @@ df_passe = dftot[dftot["time"] <= maintement].copy()
 df_passe = df_passe[df_passe["time"] >= maintement - pd.Timedelta(days=periode)]
 
 
+st.title("Dashboard Météo France")
+
+st.caption(f"Dernière mise à jour est "f"{datetime.now().strftime("%d/%m/%Y %H:%M")} ")
+
+cols = df_passe[len(ville_choisie)]
+
+for i, ville in enumerate(ville_choisie):
+    dfv = df_passe[df_passe["ville"] == ville]
+
+    if dfv.empty():
+        continue
+    temp_moy = dfv["temperature_2m"].mean()
+    temp_now = dfv["temperature_2m"].iloc[-1]
+    delta = temp_now - temp_moy
+
+    col[i].metric(f"{ville}",
+                    f"{temp_moy} °C",
+                    f"{delta} °C vs moyenne")
+
+
+                
+
+
 
 
 
