@@ -37,3 +37,15 @@ cor_ville = {
     "Lyon" : (45.73,4.81),
     "Marseille" : (43.27,5.37),
 }
+
+st.sidebar.title("Paramètres")
+
+ville_choisie = st.sidebar.multiselect("Selection des villes",list(cor_ville.keys()),default="Paris")
+
+periode = st.periode("Barre de période (nombre de jours passés)", min_value=1,max_value=90,value=30)
+
+
+
+
+
+
