@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd 
-import numpy as pd
+import numpy as np
 import requests
 from datetime import datetime
 import plotly.express as px
@@ -11,16 +11,16 @@ st.set_page_config(
     layout="wide"
 )
 
-def recup_api(ville,lat,long):
+def recup_api(ville,lat,long,jours=30):
     url="https://api.open-meteo.com/v1/forecast"
 
     params={
         "ville" : ville,
-        "timezone" : "Paris/Europe",
+        "timezone" : "Europe/Paris",
         "latitude" : lat,
         "longitude" : long,
         "hourly" : ["temperature_2m","precipitation","windspeed_10m"],
-        "past_days" : 30,
+        "past_days" : jours,
         "forecast_days" : 7
     }
     response = requests.get(url,params=params)
@@ -28,7 +28,7 @@ def recup_api(ville,lat,long):
     data = response.json()
 
     df = pd.DataFrame(data["hourly"])
-    df["time"] = df.to_datetime(df["time"])
+    df["time"] = pd.to_datetime(df["time"])
     df["ville"] = ville
     return df
 
@@ -40,15 +40,15 @@ cor_ville = {
 
 st.sidebar.title("Paramètres")
 
-ville_choisie = st.sidebar.multiselect("Selection des villes",list(cor_ville.keys()),default="Paris")
+ville_choisie = st.sidebar.multiselect("Selection des villes",list(cor_ville.keys()),default=["Paris"])
 
-periode = st.periode("Barre de période (nombre de jours passés)", min_value=1,max_value=90,value=30)
+periode = st.sidebar.slider("Barre de période (nombre de jours passés)", min_value=1,max_value=90,value=30)
 
 with st.spinner("chargement des données"):
     dfs=[]
-    for ville in cor_ville:
+    for ville in ville_choisie:
         lat,long = cor_ville[ville]
-        df = recup_api(ville,lat,long)
+        df = recup_api(ville,lat,long,periode)
         dfs.append(df)
 
 if not dfs:
@@ -68,23 +68,20 @@ st.title("Dashboard Météo France")
 
 st.caption(f"Dernière mise à jour est "f"{datetime.now().strftime("%d/%m/%Y %H:%M")} ")
 
-cols = df_passe[len(ville_choisie)]
+cols = st.columns(len(ville_choisie))
 
 for i, ville in enumerate(ville_choisie):
     dfv = df_passe[df_passe["ville"] == ville]
 
-    if dfv.empty():
+    if dfv.empty:
         continue
     temp_moy = dfv["temperature_2m"].mean()
     temp_now = dfv["temperature_2m"].iloc[-1]
     delta = temp_now - temp_moy
 
-    col[i].metric(f"{ville}",
-                    f"{temp_moy} °C",
-                    f"{delta} °C vs moyenne")
-
-
-
+    cols[i].metric(f"{ville}",
+                    f"{temp_now:.1f} °C",
+                    f"{delta:+.1f} °C vs moyenne")
 
 col1,col2 = st.columns(2)
 
@@ -99,19 +96,19 @@ with col1:
         title="températures des régions dans le temps"
 
 )
-    fig.update_layout(hovermode="x unified")    
-    plotly_chart(fig,use_container_width=True)
+    fig.update_layout(hovermode="x unified")
+    st.plotly_chart(fig,use_container_width=True)
 
-with col2: 
+with col2:
     st.subheader("Précipitations")
 
-    df_daily = (df_passe.assign(jour=df["passe"].dt.date).groupby("ville","jour")["precipitation"].sum().reset_index())
+    df_daily = (df_passe.assign(jour=df_passe["time"].dt.date).groupby(["ville","jour"])["precipitation"].sum().reset_index())
     fig2 = px.bar(
         df_daily,
-        x="time",
+        x="jour",
         y="precipitation",
         color="ville",
-        labels = {"time" : "date", "precipitation" : "Precipitation","ville" : "Ville"},
+        labels = {"jour" : "date", "precipitation" : "Precipitation","ville" : "Ville"},
         title="précipitations des régions dans le temps"
 
     )
