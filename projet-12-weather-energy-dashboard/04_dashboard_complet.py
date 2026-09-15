@@ -96,6 +96,7 @@ with col1:
         y="temperature_2m",
         color="ville",
         labels = {"time" : "date", "temperature_2m" : "Température","ville" : "Ville"},
+        title="températures des régions dans le temps"
 
 )
     fig.update_layout(hovermode="x unified")    
@@ -111,12 +112,36 @@ with col2:
         y="precipitation",
         color="ville",
         labels = {"time" : "date", "precipitation" : "Precipitation","ville" : "Ville"},
+        title="précipitations des régions dans le temps"
 
     )
 
     st.plotly_chart(fig2,use_container_width=True)
 
-st.subheader("")
+st.subheader("Prévisions sur les 7 prochains jours")
+
+df_prev = dftot[dftot["time"] >= maintement].copy()
+
+
+fig3 = px.line(
+    df_prev,
+    x="time",
+    y="temperature_2m",
+    color="ville",
+    labels= {"time" : "date", "temperature_2m" : "Température en °C"},
+    title="Prévision de la temperature sur les prochains jours"
+)
+
+st.plotly_chart(fig3,use_container_width=True)
+
+csv = (df_passe.to_csv(index=False).encode("utf-8"))
+
+st.download_button(
+    "Bouton pour télécharger les données",
+    data=csv,
+    file_name="data.csv",
+    mime="text/csv"
+)
 
 
 
