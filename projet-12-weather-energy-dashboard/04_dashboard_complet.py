@@ -84,6 +84,44 @@ for i, ville in enumerate(ville_choisie):
                     f"{delta} °C vs moyenne")
 
 
+
+
+col1,col2 = st.columns(2)
+
+with col1:
+    st.subheader("Temperature")
+    fig = px.line(
+        df_passe,
+        x="time",
+        y="temperature_2m",
+        color="ville",
+        labels = {"time" : "date", "temperature_2m" : "Température","ville" : "Ville"},
+
+)
+    fig.update_layout(hovermode="x unified")    
+    plotly_chart(fig,use_container_width=True)
+
+with col2: 
+    st.subheader("Précipitations")
+
+    df_daily = (df_passe.assign(jour=df["passe"].dt.date).groupby("ville","jour")["precipitation"].sum().reset_index())
+    fig2 = px.bar(
+        df_daily,
+        x="time",
+        y="precipitation",
+        color="ville",
+        labels = {"time" : "date", "precipitation" : "Precipitation","ville" : "Ville"},
+
+    )
+
+    st.plotly_chart(fig2,use_container_width=True)
+
+st.subheader("")
+
+
+
+
+
                 
 
 
