@@ -19,3 +19,40 @@ GROUP BY heure;
 ORDER BY heure,
 
 
+Requête 3 — Consommation par saison
+
+Énoncé :
+
+Analysez la consommation électrique en fonction des quatre saisons. 
+Pour chaque saison, calculez la consommation moyenne en MW ainsi que 
+le nombre de mesures disponibles. Classez ensuite les saisons 
+de la consommation moyenne la plus élevée à la plus faible.
+
+SELECT CASE WHEN(CAST(strftime('%m',datetime) AS INT) IN [12,1,2] THEN 'Hiver')
+SELECT CASE WHEN(CAST(strftime('%m',datetime) AS INT) IN [3,4,5] THEN 'Printemps')
+SELECT CASE WHEN(CAST(strftime('%m',datetime) AS INT) IN [6,7,8] THEN 'Ete')
+ELSE 'Automne' END AS saison,
+ROUND(AVG(conso_mw),2) AS conso_moy
+COUNT(*) AS nbre_mesure
+FROM eco2mix
+GROUP BY saison
+ORDER BY conso_moy DESC;
+
+
+-- Requête 4 — Semaine vs week-end
+
+
+SELECT CASE WHEN CAST(strftime('%w',datetime) AS INT) IN (1,2,3,4,5) THEN 'jour_semaine'
+ELSE 'weekend' END AS type_jour,
+ROUND(AVG(conso_mw),2) AS conso_moy,
+COUNT(*) AS nbre_mesure
+FROM eco2mix
+GROUP BY type_jour
+ORDER BY conso_moy DESC;
+
+
+
+
+
+
+
