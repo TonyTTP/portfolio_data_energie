@@ -19,14 +19,7 @@ GROUP BY heure;
 ORDER BY heure,
 
 
-Requête 3 — Consommation par saison
-
-Énoncé :
-
-Analysez la consommation électrique en fonction des quatre saisons. 
-Pour chaque saison, calculez la consommation moyenne en MW ainsi que 
-le nombre de mesures disponibles. Classez ensuite les saisons 
-de la consommation moyenne la plus élevée à la plus faible.
+--Requête 3 — Consommation par saison
 
 SELECT CASE WHEN(CAST(strftime('%m',datetime) AS INT) IN [12,1,2] THEN 'Hiver')
 SELECT CASE WHEN(CAST(strftime('%m',datetime) AS INT) IN [3,4,5] THEN 'Printemps')
