@@ -1,6 +1,6 @@
 import pandas as pd
-import request 
-import sqlite3 
+import requests
+import sqlite3
 
 def recup_rte(debut_date="2024-01-01",fin_date="2024-10-01"):
     url = ("https://data.rte-france.com"
@@ -18,12 +18,12 @@ def recup_rte(debut_date="2024-01-01",fin_date="2024-10-01"):
             "date_heure,"
             "consommation_brute_total,"
             "consommation_brute_gaz,"
-            "consommation_brute_fioul,"
+            "consommation_brute_fioul"
         ),
-        "timezone" : "Europe/Paris", 
+        "timezone" : "Europe/Paris",
         "offset" : 0,
     }
-    reponse = resquests.get(url,params=params)
+    reponse = requests.get(url,params=params)
 
     if reponse.status_code == 200:
         data = reponse.json()
@@ -52,17 +52,16 @@ def recup_eco2mix(debut_date="2024-01-01",fin_date="2024-10-01"):
         "timezone" : "Europe/Paris",
         "limit" : 100,
         "offset" : 0,
-        "select" : {
-            "date_heure"
-            "consommation",
-            "fioul",
-            "solaire",
-            "gaz",
-
-        }
+        "select" : (
+            "date_heure,"
+            "consommation,"
+            "fioul,"
+            "solaire,"
+            "gaz"
+        )
     }
     reponse = requests.get(url,params=params)
-    if reponse.status_code() == 200:
+    if reponse.status_code == 200:
         print("Récupération de données réussis")
         data = reponse.json()
         df = pd.DataFrame(data["results"])
@@ -72,16 +71,17 @@ def recup_eco2mix(debut_date="2024-01-01",fin_date="2024-10-01"):
         print("Accès impossible à Eco2mix")
 
 
-df_rte = recup_eco2mix()
+df_rte = recup_rte()
 
 
-connect = sqlite3.connect("data_reelle")
+connect = sqlite3.connect("data_reelle.db")
 df_rte.to_sql(
     "eco_mix",
     connect,
     if_exists="replace",
     index=False
 )
+connect.close()
 
 df_rte.to_csv(
     "data_eco2mix.csv",
@@ -120,6 +120,6 @@ def saison(mois):
 df["saison"] = df["mois"].apply(saison)
 
 
-df.to_csv("rte_powerbi_ready",index=False,encoding="utf-8-sig")
-print(df.head)
+df.to_csv("rte_powerbi_ready.csv",index=False,encoding="utf-8-sig")
+print(df.head())
 
