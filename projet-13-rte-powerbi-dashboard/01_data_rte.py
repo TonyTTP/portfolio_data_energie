@@ -2,7 +2,7 @@ import pandas as pd
 import requests
 import sqlite3
 
-def recup_rte(debut_date="2024-01-01",fin_date="2024-07-01"):
+def recup_rte(debut_date="2024-01-01",fin_date="2026-01-01"):
     url = ("https://odre.opendatasoft.com"
         "/api/explore/v2.1/catalog/datasets"
         "/consommation-quotidienne-brute/records")
