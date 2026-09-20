@@ -2,40 +2,50 @@ import pandas as pd
 import requests
 import sqlite3
 
-def recup_rte(debut_date="2024-01-01",fin_date="2024-10-01"):
+def recup_rte(debut_date="2024-01-01",fin_date="2024-07-01"):
     url = ("https://odre.opendatasoft.com"
         "/api/explore/v2.1/catalog/datasets"
         "/consommation-quotidienne-brute/records")
 
-    params = {
-        "where" : (
-             f"date_heure >= '{debut_date}T00:00:00+01:00'"
-            f" AND date_heure <= '{fin_date}T23:59:59+01:00'"
-),
-        "limit" : 100,
-        "order_by" : "date_heure ASC",
-        "select" : (
-            "date_heure,"
-            "consommation_brute_totale,"
-            "consommation_brute_gaz_totale"
-        ),
-        "timezone" : "Europe/Paris",
-        "offset" : 0,
-    }
-    reponse = requests.get(url,params=params)
+    limit = 100
+    offset = 0
+    tous_les_resultats = []
 
-    if reponse.status_code == 200:
+    while True:
+        params = {
+            "where" : (
+                 f"date_heure >= '{debut_date}T00:00:00+01:00'"
+                f" AND date_heure <= '{fin_date}T23:59:59+01:00'"
+    ),
+            "limit" : limit,
+            "order_by" : "date_heure ASC",
+            "select" : (
+                "date_heure,"
+                "consommation_brute_totale,"
+                "consommation_brute_gaz_totale"
+            ),
+            "timezone" : "Europe/Paris",
+            "offset" : offset,
+        }
+        reponse = requests.get(url,params=params)
+
+        if reponse.status_code != 200:
+            print(f"Erreur : {reponse.status_code}")
+            print("fallback : Récupérons sur Eco2mix")
+            return recup_eco2mix(debut_date, fin_date)
+
         data = reponse.json()
-        print("Récuperation valide")
-        df = pd.DataFrame(data["results"])
-        print(f"le nombre de lignes RTE récupérées est {len(df)}")
-        return df
+        resultats = data["results"]
+        tous_les_resultats.extend(resultats)
+        print(f"page offset={offset} : {len(resultats)} lignes récupérées")
 
-    else:
-        print(f"Erreur : {reponse.status_code}")
-        print("fallback : Récupérons sur Eco2mix")
+        if len(resultats) < limit:
+            break
+        offset += limit
 
-        return recup_eco2mix(debut_date, fin_date)
+    df = pd.DataFrame(tous_les_resultats)
+    print(f"le nombre de lignes RTE récupérées au total est {len(df)}")
+    return df
 
 def recup_eco2mix(debut_date="2024-01-01",fin_date="2024-10-01"):
     url = ("https://odre.opendatasoft.com"
@@ -76,9 +86,6 @@ df_rte = recup_rte()
 
 if df_rte is None:
     print("Aucune donnée récupérée (RTE et Eco2mix ont échoué). Arrêt du script.")
-    print("Si l'erreur est un code 407, cela vient probablement d'un proxy d'entreprise "
-          "qui bloque la requête avant même d'atteindre l'API RTE : réessayer hors réseau "
-          "professionnel (ex: connexion personnelle) ou configurer l'authentification proxy.")
     raise SystemExit(1)
 
 
@@ -108,7 +115,7 @@ df = df.rename(columns={
     "consommation_brute_gaz_totale" : "conso_gaz_mw"
 })
 
-df["datetime"] = pd.to_datetime(df["datetime"])
+df["datetime"] = pd.to_datetime(df["datetime"], utc=True).dt.tz_convert("Europe/Paris")
 df["date"] = df["datetime"].dt.date
 df["heure"] = df["datetime"].dt.hour
 df["mois"] = df["datetime"].dt.month
