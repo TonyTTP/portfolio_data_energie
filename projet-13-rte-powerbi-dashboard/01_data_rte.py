@@ -3,7 +3,7 @@ import requests
 import sqlite3
 
 def recup_rte(debut_date="2024-01-01",fin_date="2024-10-01"):
-    url = ("https://data.rte-france.com"
+    url = ("https://odre.opendatasoft.com"
         "/api/explore/v2.1/catalog/datasets"
         "/consommation-quotidienne-brute/records")
 
@@ -16,9 +16,8 @@ def recup_rte(debut_date="2024-01-01",fin_date="2024-10-01"):
         "order_by" : "date_heure ASC",
         "select" : (
             "date_heure,"
-            "consommation_brute_total,"
-            "consommation_brute_gaz,"
-            "consommation_brute_fioul"
+            "consommation_brute_totale,"
+            "consommation_brute_gaz_totale"
         ),
         "timezone" : "Europe/Paris",
         "offset" : 0,
@@ -32,14 +31,14 @@ def recup_rte(debut_date="2024-01-01",fin_date="2024-10-01"):
         print(f"le nombre de lignes RTE récupérées est {len(df)}")
         return df
 
-    else: 
+    else:
         print(f"Erreur : {reponse.status_code}")
         print("fallback : Récupérons sur Eco2mix")
 
-        return recup_eco2mix()
+        return recup_eco2mix(debut_date, fin_date)
 
 def recup_eco2mix(debut_date="2024-01-01",fin_date="2024-10-01"):
-    url = ("https://data.rte-france.com"
+    url = ("https://odre.opendatasoft.com"
         "/api/explore/v2.1/catalog/datasets"
         "/eco2mix-national-cons-def/records")
 
@@ -68,10 +67,19 @@ def recup_eco2mix(debut_date="2024-01-01",fin_date="2024-10-01"):
         print(f"le nombre de lignes récupérées est {len(df)}")
         return df
     else:
+        print(f"Erreur : {reponse.status_code}")
         print("Accès impossible à Eco2mix")
+        return None
 
 
 df_rte = recup_rte()
+
+if df_rte is None:
+    print("Aucune donnée récupérée (RTE et Eco2mix ont échoué). Arrêt du script.")
+    print("Si l'erreur est un code 407, cela vient probablement d'un proxy d'entreprise "
+          "qui bloque la requête avant même d'atteindre l'API RTE : réessayer hors réseau "
+          "professionnel (ex: connexion personnelle) ou configurer l'authentification proxy.")
+    raise SystemExit(1)
 
 
 connect = sqlite3.connect("data_reelle.db")
@@ -96,9 +104,8 @@ print(f"Nombre de valeurs manquantes : {df_rte.isnull().sum()}")
 
 df = df.rename(columns={
     "date_heure" : "datetime",
-    "consommation_brute_total" : "conso_tot_mw",
-    "consommation_brute_gaz" : "conso_gaz_mw",
-    "consommation_brute_fioul" : "conso_fioul_mw"
+    "consommation_brute_totale" : "conso_tot_mw",
+    "consommation_brute_gaz_totale" : "conso_gaz_mw"
 })
 
 df["datetime"] = pd.to_datetime(df["datetime"])
