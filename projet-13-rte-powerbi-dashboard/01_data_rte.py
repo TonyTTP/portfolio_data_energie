@@ -8,42 +8,52 @@ def recup_rte(debut_date="2024-01-01",fin_date="2026-01-01"):
         "/consommation-quotidienne-brute/records")
 
     limit = 100
-    offset = 0
-    tous_les_resultats = []
+    toutresultats = []
 
-    while True:
-        params = {
-            "where" : (
-                 f"date_heure >= '{debut_date}T00:00:00+01:00'"
-                f" AND date_heure <= '{fin_date}T23:59:59+01:00'"
-    ),
-            "limit" : limit,
-            "order_by" : "date_heure ASC",
-            "select" : (
-                "date_heure,"
-                "consommation_brute_totale,"
-                "consommation_brute_gaz_totale"
-            ),
-            "timezone" : "Europe/Paris",
-            "offset" : offset,
-        }
-        reponse = requests.get(url,params=params)
+    tranches = pd.date_range(start=debut_date, end=fin_date, freq="MS")
+    if len(tranches) == 0 or tranches[0] != pd.Timestamp(debut_date):
+        tranches = pd.DatetimeIndex([pd.Timestamp(debut_date)]).append(tranches)
+    tranches = tranches.append(pd.DatetimeIndex([pd.Timestamp(fin_date)]))
 
-        if reponse.status_code != 200:
-            print(f"Erreur : {reponse.status_code}")
-            print("fallback : Récupérons sur Eco2mix")
-            return recup_eco2mix(debut_date, fin_date)
+    for i in range(len(tranches) - 1):
+        tranche_debut = tranches[i].strftime("%Y-%m-%d")
+        tranche_fin = tranches[i + 1].strftime("%Y-%m-%d")
+        offset = 0
 
-        data = reponse.json()
-        resultats = data["results"]
-        tous_les_resultats.extend(resultats)
-        print(f"page offset={offset} : {len(resultats)} lignes récupérées")
+        while True:
+            params = {
+                "where" : (
+                     f"date_heure >= '{tranche_debut}T00:00:00+01:00'"
+                    f" AND date_heure <= '{tranche_fin}T23:59:59+01:00'"
+        ),
+                "limit" : limit,
+                "order_by" : "date_heure ASC",
+                "select" : (
+                    "date_heure,"
+                    "consommation_brute_totale,"
+                    "consommation_brute_gaz_totale"
+                ),
+                "timezone" : "Europe/Paris",
+                "offset" : offset,
+            }
+            reponse = requests.get(url,params=params)
 
-        if len(resultats) < limit:
-            break
-        offset += limit
+            if reponse.status_code != 200:
+                print(f"Erreur : {reponse.status_code}")
+                print("fallback : Récupérons sur Eco2mix")
+                return recup_eco2mix(debut_date, fin_date)
 
-    df = pd.DataFrame(tous_les_resultats)
+            data = reponse.json()
+            resultats = data["results"]
+            toutresultats.extend(resultats)
+            print(f"tranche {tranche_debut} vers {tranche_fin} offset={offset} : {len(resultats)} lignes récupérées")
+
+            if len(resultats) < limit:
+                break
+            offset += limit
+
+    df = pd.DataFrame(toutresultats)
+    df = df.drop_duplicates(subset="date_heure").sort_values("date_heure").reset_index(drop=True)
     print(f"le nombre de lignes RTE récupérées au total est {len(df)}")
     return df
 
