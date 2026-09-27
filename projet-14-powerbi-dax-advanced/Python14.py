@@ -91,7 +91,37 @@ def renouvelable(df):
 
     return df
 
+def dataset(df):
+    date_fin = datetime.now()
+    date_debut = date_fin - timedelta(day=nb_jour)
 
+    date_debut_str = date_debut.strftime("%Y-%m-%d %H:%M:%S")
+    date_fin_str = date_fin.strftime("%Y-%m-%d %H:%M:%S")
+
+    print(f"la date de début : {date_debut_str}")
+    print(f"la date de fin : {date_fin_str}")
+
+    df_natio = recup(url_regional,where)
+    df_natio = temporalite(df)
+    df_natio = renouvelable(df)
+    df_natio = df.dropna(subset=["consommation"])
+    df_region = recup(url_national,where)
+    df_region = temporalite(df_region)
+    df_region = renouvelable(df_region)
     
+    connexion = sqlite3.connect("database.db")
+    df_natio.to_sql("eco2mix_natio",connexion,if_exists="replace",index=False)
+    df_region.to_sql("eco2mix_region",connexion,if_exists="replace",index=False)
+    df_natio.to_csv("eco2mix_natio.csv", index=False,encoding="utf-8-sig")
+    df_region.to_csv("eco2mix_region.csv", index=False,encoding="utf-8-sig")
+
+    connexion.close()
+    return df_natio,df_region
+
+
+df, df_region = build_powerbi_dataset()
+
+
+
 
 
