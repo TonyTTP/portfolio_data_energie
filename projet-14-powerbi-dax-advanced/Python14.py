@@ -87,9 +87,11 @@ def renouvelable(df):
 
     if "consommation" in df.columns():
         df["consommation"] = pd.to_numeric(df["consommation"], errors="coerce")
-        df["part_renouvel_%"] = (df["part_renouvel_%"] / df["part_renouvel_%"] *100).round(1)
+        df["part_renouvel_%"] = (df["renouvelable"] / df["consommation"] *100).round(1)
 
     return df
+
+
     
 
 
