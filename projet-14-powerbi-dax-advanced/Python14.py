@@ -76,3 +76,20 @@ def temporalite(df):
     df["type_jour"] = df["jour_semaine"].map({lambda x : "Jour_de_semaine" if x < 5 else "Weekend"})
 
     return df
+
+def renouvelable(df):
+    for colonne in ["eolien","solaire","hydraulique"]:
+        if colonne not in df.columns():
+            df[colonne] = 0
+        df[colonne] = pd.to_numeric(df[colonne], errors="coerce").fillna(0)
+
+    df["renouvelable"] = (df["eolien"] + df["solaire"] + df["hydraulique"])
+
+    if "consommation" in df.columns():
+        df["consommation"] = pd.to_numeric(df["consommation"], errors="coerce")
+        df["part_renouvel_%"] = (df["part_renouvel_%"] / df["part_renouvel_%"] *100).round(1)
+
+    return df
+    
+
+
