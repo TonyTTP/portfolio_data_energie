@@ -1,6 +1,7 @@
-import datetime from datetime
+from datetime import datetime, timedelta
 import requests
 import pandas as pd
+import sqlite3
 
 
 nb_jour = 30
@@ -26,7 +27,7 @@ def recup(url,where,size=10000):
             "offset" : offset,
             "where" : where,
             "limit" : size,
-            "order_by" : "daye_heure ASC"
+            "order_by" : "date_heure ASC"
         }
         response = requests.get(url, params=params)
         response.raise_for_status()
@@ -42,3 +43,36 @@ def recup(url,where,size=10000):
 
     return pd.DataFrame(tout_enr)
 
+def temporalite(df):
+    df["date_heure"] = df["date_heure"].dt.datetime
+    df = df.dropna(subset="date_heure")
+    df["annee"] = df["date_heure"].dt.year
+    df["mois"] = df["date_heure"].dt.month
+    df["jour"] = df["date_heure"].dt.day
+    df["heure"] = df["date_heure"].dt.hour
+    df["minute"] = df["date_heure"].dt.minute
+
+    df["jour_semaine"] = df["date_heure"].dt.dayofweek
+    df["nom_jour"] = df["date_heure"].dt.day_name()
+
+    df["saison"] = df["mois"].map({
+        12 : "Hiver",
+        1 : "Hiver",
+        2 : "Hiver",
+
+        3 : "Printemps",
+        4 : "Printemps",
+        5 : "Printemps",
+
+        6 : "été",
+        7 : "été",
+        8 : "été",
+
+        9 : "Automne",
+        10 : "Automne",
+        11 : "Automne",
+    })
+
+    df["type_jour"] = df["jour_semaine"].map({lambda x : "Jour_de_semaine" if x < 5 else "Weekend"})
+
+    return df
