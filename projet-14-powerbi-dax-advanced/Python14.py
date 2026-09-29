@@ -2,6 +2,9 @@ from datetime import datetime, timedelta
 import requests
 import pandas as pd
 import sqlite3
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+connexion = sqlite3.connect(os.path.join(BASE_DIR, "database.db"))
 
 
 nb_jour = 30

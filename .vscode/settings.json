@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "energir",
+            "database": "C:\\Users\\theba\\OneDrive\\Documents\\Perso-GitHub\\portfolio_data_energie\\projet-13-rte-powerbi-dashboard\\data_reelle.db"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}
