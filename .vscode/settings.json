@@ -5,6 +5,12 @@
             "driver": "SQLite",
             "name": "energir",
             "database": "C:\\Users\\theba\\OneDrive\\Documents\\Perso-GitHub\\portfolio_data_energie\\projet-13-rte-powerbi-dashboard\\data_reelle.db"
+        },
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "projet14",
+            "database": "C:\\Users\\theba\\Documents\\portfolio_data_energie\\projet-14-powerbi-dax-advanced\\database.db"
         }
     ],
     "sqltools.useNodeRuntime": true
