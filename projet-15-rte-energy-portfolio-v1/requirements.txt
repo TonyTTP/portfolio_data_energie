@@ -1,0 +1,8 @@
+pandas
+numpy
+requests
+openpyxl
+plotly
+streamlit
+prophet
+scikit-learn
