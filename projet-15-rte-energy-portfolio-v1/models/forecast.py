@@ -15,16 +15,23 @@ def train(df,periods=96):
     df_train = df_prophet[df_prophet["ds"] <= cutoff]
     df_test = df_prophet[df_prophet["ds"] > cutoff]
 
-    modele = Prophet(
-        yearly_seasonality=False,
-        weekly_seasonality=True,
-        daily_seasonality=True,
-        seasonality_mode="multiplicative"
-    )
+    def nouveau_modele():
+        return Prophet(
+            yearly_seasonality=False,
+            weekly_seasonality=True,
+            daily_seasonality=True,
+            seasonality_mode="multiplicative"
+        )
+
+    # Évaluation : entraînement sur 80 % des données, test sur les 20 % restants
+    modele = nouveau_modele()
     modele.fit(df_train)
     forecast_test = modele.predict(df_test[["ds"]])
     df_eval = forecast_test.merge(df_test,on="ds",how="inner")
 
+    # Prévision : ré-entraînement sur toutes les données pour prévoir après la dernière date connue
+    modele = nouveau_modele()
+    modele.fit(df_prophet)
     future = modele.make_future_dataframe(periods=periods,freq="15min")
     forecast = modele.predict(future)
 
