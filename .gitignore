@@ -4,3 +4,6 @@ eco2mix_region.csv
 formation.db
 powerbi_data.db
 __pycache__/
+.env
+.env.*
+*.db
