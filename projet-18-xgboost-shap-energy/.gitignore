@@ -1,0 +1,6 @@
+database/
+*.db
+.env
+models/
+outputs/
+__pycache__/
