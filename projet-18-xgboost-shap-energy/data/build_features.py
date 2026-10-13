@@ -25,7 +25,7 @@ def build_features(df):
             if "conso_lag_48h" not in df.columns:
                 df["conso_lag_48h"] = df["conso_mw"].shift(48)
             if "conso_lag_7j" not in df.columns:
-                df["conso_lag_7j"] = df["conso_mw"].shift(336)
+                df["conso_lag_7j"] = df["conso_mw"].shift(168)
             if "conso_rolling_48h" not in df.columns:
                 df["conso_rolling_48h"] = df["conso_mw"].shift(1).rolling(48).mean()
     return df.reset_index(drop=True)
