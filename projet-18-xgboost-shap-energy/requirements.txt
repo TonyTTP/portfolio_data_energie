@@ -8,3 +8,4 @@ plotly
 statsmodels
 streamlit
 joblib
+requests

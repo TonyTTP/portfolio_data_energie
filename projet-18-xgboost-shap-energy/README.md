@@ -14,10 +14,13 @@ Prévision de la consommation électrique française à partir de l'historique, 
 pip install -r requirements.txt
 ```
 
-1. Créer `database/energy.db` avec `sql/01_create_tables.sql`, y importer les données eco2mix et météo, puis exécuter `sql/02_import_features.sql`.
-2. Entraîner et évaluer les modèles :
+1. Importer 2 ans de données eco2mix (ODRE) et météo de Paris (Open-Meteo) dans `database/energy.db` :
    ```bash
    cd data
+   python import_data.py
+   ```
+2. Entraîner et évaluer les modèles :
+   ```bash
    python evaluate.py
    python shape_analysis.py
    python diagnose.py

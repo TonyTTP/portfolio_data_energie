@@ -12,7 +12,7 @@ CREATE VIEW IF NOT EXISTS v_ml_features AS
         m.temperature, m.precipitation, m.irradiation, m.vitesse_vent, m.humidity, m.pression_atm,
         
         LAG(e.consommation,48) OVER (ORDER BY e.datetime) AS conso_lag_48h,
-        LAG(e.consommation,336) OVER (ORDER BY e.datetime)AS conso_lag_7j,
+        LAG(e.consommation,168) OVER (ORDER BY e.datetime)AS conso_lag_7j,
         AVG(e.consommation) OVER (ORDER BY e.datetime ROWS BETWEEN 48 PRECEDING AND 1 PRECEDING
         ) AS conso_rolling_48h
 
